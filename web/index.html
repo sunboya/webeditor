@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>web editor</title>
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"   />
+    <link rel="stylesheet" href="css/site.css"   />
+    <link rel="stylesheet" href="node_modules/xterm/src/xterm.css" />
+
+</head>
+<body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="javascript:">WebEditor</a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav">
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">菜单 <span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                <li><a href="#" id="save_file">Save File(Ctrl + s)</a></li>
+                <li><a href="#" id="run_terminal">Terminal(Ctrl + `)</a></li>
+                <li><a href="#">About</a></li>
+              </ul>
+            </li>
+          </ul>
+          <form class="navbar-form navbar-left" role="path">
+            <div class="form-group">
+              <input type="text" id="filepath" autocomplete="off" class="form-control" placeholder="Path">
+            </div>
+            <button type="submit" id="change_path" class="btn btn-default">Go</button>
+          </form>
+        </div><!-- /.navbar-collapse -->
+      </div><!-- /.container-fluid -->
+    </nav>
+
+
+
+<div class="container-fluid webpage">
+    <div class="row" id="tree">
+        <div class="col-md-3 left" style="padding:0">
+            <ul id="menu">
+              <item  class="item" :model="treeData"></item>
+            </ul>
+        </div>
+        <div class="col-md-9" style="padding:0">
+           <div class="right">
+                <div class="header" id="header">
+                  <ul class="">
+                    <li v-for="tab in tabs" v-on:mouseover="tab.close_show=true" v-on:mouseout="tab.close_show=false" title="{{tab.path}}" v-on:click="show_editor(tab._id)" class="{{curTab==tab._id? 'active': ''}}"
+                      _id="{{tab._id}}">                      
+                      <div class="text" >{{tab.name|maxlenght 24}} </div>
+                       <div v-show="tab.save||tab.close_show"  v-on:click="close(tab._id)"  class="close-icon"><span aria-hidden="true">&times;</span></div>
+                       <div  v-show="!tab.save&&!tab.close_show"  class="close-icon"><span style="color:#679AFF" class="glyphicon glyphicon-asterisk"></span></div> 
+                     </li>
+                  </ul>
+                </div>
+                <div class="content">
+                  <div style="height:100%;" type="body" id="content{{tab._id}}" v-for="tab in tabs" v-show="curTab==tab._id"></div>
+                </div>
+
+                <div class="terminal_module" id="terminal_module">
+                  <div class="header" > 
+                    <ul>
+                        <li v-for="(id, status) in labels" v-on:click="curLabel=id" ><i  class="glyphicon glyphicon-file {{curLabel==id?'active':''}}"></i></li>
+                    </ul>
+
+                    
+                    <button type="button" class="close"  aria-label="Close"><span aria-hidden="true" v-on:click="close_terminal()">&times;</span></button>
+                    <button type="button" class="close"  aria-label="Close"><span aria-hidden="true" v-on:click="add_terminal()">+</span></button>
+                    <button type="button" class="close"  aria-label="Close"><span v-on:click="hide_terminal()" class="glyphicon glyphicon-triangle-bottom" ></span></button>
+                  </div>
+                  <div id="terminal-container{{id}}" v-for="(id, status) in labels" v-show="curLabel==id" style="height:100%;"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<ul id="contextMenu" class="dropdown-menu">
+    <li v-if="type=='folder'">
+      <a href="javascript:;" v-on:click="add('file')" >新建文件</a>	
+    </li>
+    <li v-if="type=='folder'">
+      <a href="javascript:;" v-on:click="add('folder')">新建目录</a>	
+    </li>
+    <li v-if="type=='file'">
+      <a href="javascript:;" v-on:click="del()">删除文件</a>
+    </li>
+    <li>
+      <a href="javascript:;" v-on:click="rename()">重命名</a>
+    </li>
+    <li v-if="type=='folder'">
+      <a href="javascript:;" v-on:click="refresh()">刷新次目录</a>
+    </li>
+</ul>
+
+<div class="modal fade" id="close_file_confirm">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{title}}</h4>
+      </div>
+      <div class="modal-body">
+        <p>{{content}}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal" v-on:click="close()">不保存</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal" v-on:click="hide()">取消</button>
+        <button type="button" class="btn btn-primary" v-on:click="save()">保存此文件</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal fade" id="confirm">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{title}}</h4>
+      </div>
+      <div class="modal-body">
+        <p>{{content}}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal" v-on:click="hide()">{{cancel_msg}}</button>
+        <button type="button" class="btn btn-primary" v-on:click="save()">{{ok_msg}}</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal fade" id="fill_text_dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{title}}</h4>
+      </div>
+      <div class="modal-body">
+        <p><input  type="text"  class="form-control" v-model="input_text" /></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" v-on:click="save()">Ok</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+
+<div id="message">
+<div  class="message_content alert alert-{{type}} alert-dismissible" role="alert" v-show="show">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <strong>{{content}}</strong> 
+</div></div>
+
+
+
+
+<script type="text/x-template" id="item-template">
+  <li>
+    <div class="file-item" path="{{model.path}}" v-on:contextmenu="open_menu($event)" type="{{model.type}}" 
+      :class="{bold: isFolder}"
+      @click="toggle">
+      <span style="font-size:8px" v-if="isFolder" class="{{open ? 'glyphicon glyphicon-chevron-down' : 'glyphicon glyphicon-chevron-right'}}"></span>
+      <span v-if="!isFolder" style="width:1em; display:inline-block">  </span>
+      <span v-if="isFolder" class="glyphicon glyphicon-folder-close"></span>
+      <span v-if="!isFolder" class="glyphicon glyphicon-file"></span>
+      <span unselectable="on" style="-moz-user-select:none;" onselectstart="return false;">{{model.name}}</span>
+    </div>
+    <ul v-show="open" v-if="isFolder">
+      <item
+        class="item"
+        v-for="model_child in model.children"
+        :model="model_child" :parent="model">
+      </item>
+    </ul>
+  </li>
+</script>
+<script src="bower_components/underscore/underscore-min.js"></script>
+<script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/vue/dist/vue.min.js"></script>
+<script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="js/bootstrap3-typeahead.min.js"></script>
+<script src="node_modules/xterm/src/xterm.js"></script>
+<script src="node_modules/xterm/addons/attach/attach.js"></script>
+<script src="node_modules/xterm/addons/fit/fit.js"></script>
+<script src="node_modules/xterm/addons/fullscreen/fullscreen.js"></script>
+<script src="node_modules/monaco-editor/dev/vs/loader.js"></script>
+<script src="js/tree.js"></script>
+
+</body>
+</html>

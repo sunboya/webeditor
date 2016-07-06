@@ -1,0 +1,17 @@
+{
+  "name": "webeditor", 
+  "description": "", 
+  "main": "index.js",
+  "authors": [
+    "suxiaoxin <xinyiman10@163.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*", 
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

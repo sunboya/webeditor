@@ -1,0 +1,25 @@
+{
+  "name": "webeditor",
+  "version": "1.0.0",  
+  "description": "",
+  "main": "index.js", 
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "express-ws": "^2.0.0-rc.1",
+    "lodash": "^4.13.1",
+    "lowdb": "^0.13.1",
+    "multer": "^1.1.0",
+    "underscore": "^1.8.3",
+    "xterm": "^0.33.0"
+  },
+  "dependencies": {
+    "monaco-editor": "^0.5.1",
+    "pty.js": "^0.3.0"
+  }
+}
